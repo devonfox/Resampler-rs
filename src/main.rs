@@ -1,30 +1,36 @@
 use std::env;
 use std::f32::consts::PI;
 
+use hound::WavSpec;
+
 fn main() {
     // let args: Vec<String> = env::args().collect();
     // println!("{:?}", args);
+    println!("Args: {}", env::args().count() - 1);
+
     let filename = env::args().nth(1).expect("no filename provided");
-    let srate = env::args().nth(2).expect("no sample rate provided");
-    let srate = srate.trim().parse::<u32>().unwrap();
     let mut reader = hound::WavReader::open(&filename).unwrap();
     let samples: Vec<i16> = reader.samples().map(|s| s.unwrap()).collect();
+    // let srate = env::args().nth(2).expect("no sample rate provided");
+    // let srate = srate.trim().parse::<u32>().unwrap();
+    let oldspec: hound::WavSpec = reader.spec();
 
-    let spec = hound::WavSpec {
+    let newspec = hound::WavSpec {
         channels: 1,
-        sample_rate: srate,
+        sample_rate: oldspec.sample_rate / 2,
         bits_per_sample: 16,
         sample_format: hound::SampleFormat::Int,
     };
 
-    let frequency = 440.0;
-    let duration: u32 = spec.sample_rate; // one second
-    output_basic_sine(spec, frequency, duration);
-    let newsamples = filter(samples);
-    for sample in newsamples {
-        println!("{:?}", sample);
-    }
-    
+    // let frequency = 440.0;
+    // let duration: u32 = oldspec.sample_rate; // one second
+                                             // output_basic_sine(oldspec, frequency, duration);
+
+    // let newsamples = filter(samples);
+    // let newsamples = samples;
+    let wav_samprate = oldspec.sample_rate;
+    println!("Wav Sample Rate: {}", wav_samprate);
+    resample(oldspec, newspec, samples, filename);
 }
 
 fn filter(mut samples: Vec<i16>) -> Vec<i16> {
@@ -34,13 +40,15 @@ fn filter(mut samples: Vec<i16>) -> Vec<i16> {
     samples
 }
 
-fn output_basic_sine(spec: hound::WavSpec, freq: f32, duration: u32) {
-    let mut writer = hound::WavWriter::create("sine.wav", spec).unwrap();
-    for t in (0..duration).map(|x| x as f32 / 48000.0) {
-        let sample = (t * freq * 2.0 * PI).sin();
-        let amplitude = (i16::MAX / 4) as f32; // one quarter max amplitude
-        writer.write_sample((sample * amplitude) as i16).unwrap();
+fn resample(oldspec: WavSpec, newspec: WavSpec, samples: Vec<i16>, filename: String) {
+    let mut rfilename = String::new();
+    rfilename = filename;
+    rfilename.insert(0, 'r');
+    let mut rsamp_write = hound::WavWriter::create(rfilename, newspec).unwrap();
+    let resample = filter(samples);
+    for sample in resample {
+        rsamp_write.write_sample(sample).unwrap();
     }
-    println!("sine.wav created");
-    writer.finalize().unwrap();
+    
+    rsamp_write.finalize().unwrap();
 }
