@@ -4,8 +4,6 @@ use std::f32::consts::PI;
 use hound::WavSpec;
 
 fn main() {
-    // let args: Vec<String> = env::args().collect();
-    // println!("{:?}", args);
     println!("Args: {}", env::args().count() - 1);
 
     let filename = env::args().nth(1).expect("no filename provided");
@@ -16,18 +14,12 @@ fn main() {
     let oldspec: hound::WavSpec = reader.spec();
 
     let newspec = hound::WavSpec {
-        channels: 1,
+        channels: oldspec.channels,
         sample_rate: oldspec.sample_rate / 2,
-        bits_per_sample: 16,
-        sample_format: hound::SampleFormat::Int,
+        bits_per_sample: oldspec.bits_per_sample,
+        sample_format: oldspec.sample_format,
     };
 
-    // let frequency = 440.0;
-    // let duration: u32 = oldspec.sample_rate; // one second
-                                             // output_basic_sine(oldspec, frequency, duration);
-
-    // let newsamples = filter(samples);
-    // let newsamples = samples;
     let wav_samprate = oldspec.sample_rate;
     println!("Wav Sample Rate: {}", wav_samprate);
     resample(oldspec, newspec, samples, filename);
@@ -46,6 +38,8 @@ fn resample(oldspec: WavSpec, newspec: WavSpec, samples: Vec<i16>, filename: Str
     rfilename.insert(0, 'r');
     let mut rsamp_write = hound::WavWriter::create(rfilename, newspec).unwrap();
     let resample = filter(samples);
+    println!("Input sample rate: {}", oldspec.sample_rate);
+    println!("Output sample rate: {}", newspec.sample_rate);
     for sample in resample {
         rsamp_write.write_sample(sample).unwrap();
     }
