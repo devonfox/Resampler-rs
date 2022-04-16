@@ -10,7 +10,7 @@ fn main() {
     let mut reader = hound::WavReader::open(&filename).unwrap();
     let samples: Vec<i16> = reader.samples().map(|s| s.unwrap()).collect();
     let oldspec: hound::WavSpec = reader.spec();
-    assert_eq!(oldspec.channels, 1, "Stereo file not accepted.");
+    assert_eq!(oldspec.channels, 1, "stereo file not accepted.");
 
     let newspec = hound::WavSpec {
         channels: oldspec.channels,
