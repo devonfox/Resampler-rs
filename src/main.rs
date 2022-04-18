@@ -5,12 +5,11 @@ use std::io::{prelude::*, BufReader};
 
 fn main() {
     // Takes first argument as a filename to a wav file to resample to half the rate
-
     let filename = env::args().nth(1).expect("no filename provided");
     let mut reader = hound::WavReader::open(&filename).unwrap();
     let samples: Vec<i16> = reader.samples().map(|s| s.unwrap()).collect();
     let oldspec: hound::WavSpec = reader.spec();
-    assert_eq!(oldspec.channels, 1, "stereo file not accepted.");
+    assert_eq!(oldspec.channels, 1, "mono input files only.");
 
     let newspec = hound::WavSpec {
         channels: oldspec.channels,
