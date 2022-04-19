@@ -19,7 +19,7 @@ CS410P - Music, Sound, and Computers
 
 ### What Went Down
 
-* For this assignment, I used the 'hound' crate to facilitate the reading and writing of .wav files.  The program takes one command argument of the filename and then filters the samples with an FIR filter using the 91 filter coefficients provided by Bart.  It filters, then it writes every sample into a wav file, thus making the new wav file half the samplerate as the input wav file.  
+* For this assignment, I used the 'hound' crate to facilitate the reading and writing of .wav files in the Rust language.  The program takes one command argument of the filename and then filters the samples with an FIR filter using the 91 filter coefficients provided by Bart.  It filters, then it writes every other sample into a wav file, thus making the new wav file half the samplerate as the input wav file.  I provide a simple readout of whats going on during execution via console output. 
 
 ###  How It Went
 
