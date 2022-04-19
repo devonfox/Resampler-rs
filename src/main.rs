@@ -6,24 +6,27 @@ use std::io::{prelude::*, BufReader};
 fn main() {
     // Takes first argument as a filename to a wav file to resample to half the rate
     let filename = env::args().nth(1).expect("no filename provided");
+    // creates a wav reader from 'hound' crate
     let mut reader = hound::WavReader::open(&filename).unwrap();
-    let samples: Vec<i16> = reader.samples().map(|s| s.unwrap()).collect();
-    let oldspec: hound::WavSpec = reader.spec();
-    assert_eq!(oldspec.channels, 1, "mono input files only.");
 
-    let newspec = hound::WavSpec {
-        channels: oldspec.channels,
-        sample_rate: oldspec.sample_rate / 2,
-        bits_per_sample: oldspec.bits_per_sample,
-        sample_format: oldspec.sample_format,
+    // maps samples and collects to a vec, unwrapping result in the process
+    let samples: Vec<i16> = reader.samples().map(|s| s.unwrap()).collect();
+    let inspec: hound::WavSpec = reader.spec();
+    assert_eq!(inspec.channels, 1, "mono input files only.");
+
+    let outspec = hound::WavSpec {
+        channels: inspec.channels,
+        sample_rate: inspec.sample_rate / 2,
+        bits_per_sample: inspec.bits_per_sample,
+        sample_format: inspec.sample_format,
     };
 
-    let wav_samprate = oldspec.sample_rate;
-    let duration = reader.duration() / oldspec.sample_rate;
+    let wav_samprate = inspec.sample_rate;
+    let duration = reader.duration() / inspec.sample_rate;
     println!("Source File: '{}'", filename);
     println!("Duration: {} second(s)", duration);
     println!("Wav Sample Rate: {} sps", wav_samprate);
-    resample(oldspec, newspec, samples, filename);
+    resample(inspec, outspec, samples, filename);
 }
 
 /// FIR filter function utilizes an external file of filter coefficients
@@ -61,15 +64,15 @@ fn filter(samples: Vec<i16>) -> Vec<i16> {
 
 /// Resample function takes vector of samples, calls FIR filter function on 'samples'
 /// and outputs every other sample to a wave file
-fn resample(oldspec: WavSpec, newspec: WavSpec, samples: Vec<i16>, filename: String) {
+fn resample(inspec: WavSpec, outspec: WavSpec, samples: Vec<i16>, filename: String) {
     let mut rfilename = filename;
     rfilename.insert(0, 'r');
-    let mut rsamp_write = hound::WavWriter::create(&rfilename, newspec).unwrap();
+    let mut rsamp_write = hound::WavWriter::create(&rfilename, outspec).unwrap();
     let count = samples.len() / 2;
     let resample = filter(samples);
 
-    println!("\nInput sample rate: {} sps", oldspec.sample_rate);
-    println!("Output sample rate: {} sps\n", newspec.sample_rate);
+    println!("\nInput sample rate: {} sps", inspec.sample_rate);
+    println!("Output sample rate: {} sps\n", outspec.sample_rate);
     for i in (0..resample.len()).step_by(2) {
         rsamp_write.write_sample(resample[i]).unwrap();
     }
@@ -77,8 +80,8 @@ fn resample(oldspec: WavSpec, newspec: WavSpec, samples: Vec<i16>, filename: Str
     println!("Created File: '{}'", rfilename);
     println!(
         "Duration: {} second(s)",
-        (count as u32) / newspec.sample_rate
+        (count as u32) / outspec.sample_rate
     );
-    println!("Wav Sample Rate: {} sps\n", newspec.sample_rate);
+    println!("Wav Sample Rate: {} sps\n", outspec.sample_rate);
     rsamp_write.finalize().unwrap();
 }
