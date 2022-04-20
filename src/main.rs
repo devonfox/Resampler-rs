@@ -51,8 +51,8 @@ fn filter(samples: Vec<i16>) -> Vec<i16> {
     for i in jlength..ilength {
         let mut add: f64 = 0.0;
         for j in 0..jlength - 1 {
-            let stuff = coeffs[j] * samples[i - j] as f64;
-            add += stuff;
+            let sampsum = coeffs[j] * samples[i - j] as f64;
+            add += sampsum;
         }
         filtered.push(add as i16);
     }
